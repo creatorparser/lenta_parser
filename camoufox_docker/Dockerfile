@@ -21,6 +21,8 @@ RUN chmod +x start.sh
 RUN useradd -m -s /bin/bash appuser && chown -R appuser:appuser /app
 USER appuser
 
+RUN python3 -m camoufox fetch
+
 # Порт сервера
 EXPOSE 8000
 

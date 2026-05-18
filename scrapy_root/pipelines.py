@@ -18,7 +18,6 @@ class BasePipeline:
     def from_crawler(cls, crawler):
         return cls(crawler)
 
-
     def _init_services(self, crawler):
         """Инициализация сервисов"""
         try:
@@ -38,25 +37,24 @@ class BasePipeline:
             raise
 
 
-
 class CatalogPipeline(BasePipeline):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-    
+
     def process_item(self, item, spider):
         data_items = item['products_data']
-        
+
         for product in data_items:
             try:
                 self.insert_product(product, spider)
             except Exception as e:
                 spider.logger.error(f"Error processing product {product}: {e}")
                 continue
-        
+
         spider.logger.warning(f'Вставляем {len(data_items)} элементов')
         return item
-    
+
     def insert_product(self, product, spider):
         product_data = {
             'title': get_value(product, ['title']),
@@ -95,6 +93,6 @@ class CookiesHeadersPipeline(BasePipeline):
             INSERT INTO cookies_headers (url, cookies, headers, proxy, store_id, meta, spider, type_proxy, provider_proxy, date_added, time_request)
             VALUES (%(url)s, %(cookies)s, %(headers)s,  %(proxy)s, %(store_id)s, %(meta)s, %(spider)s, %(type_proxy)s, %(provider_proxy)s, %(date_added)s, %(time_request)s)
         """
-
+        logger.info(f"Сохраняем куки для прокси {item['proxy']}")
         self.database_service.execute_update(query_insert, dict_insert)
         return item

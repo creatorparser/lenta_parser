@@ -78,26 +78,23 @@ class CookieProxyRetryMiddleware:
             logger.error(f"Ошибка при удалении cookies для store_id {store_id}: {e}")
             return False
 
-
     def _update_request_with_new_credentials(self, request, store_id, spider):
         """Обновляет запрос новыми куками и прокси"""
         try:
             # Получаем новые credentials
             cookies, proxy, headers = self.get_cookies(store_id)
-            
+
             logger.info(f"Установка credentials для {request.url}:")
             logger.info(f"  Proxy из БД: {proxy}")
-            
+
             # Парсим cookies
             try:
                 parsed_cookies = json.loads(cookies)
-                logger.info(f"  Cookies распарсены: {len(parsed_cookies)} записей")
-                logger.debug(f"  Cookies: {parsed_cookies}")
             except json.JSONDecodeError as e:
                 logger.error(f"Ошибка парсинга cookies: {e}")
                 logger.error(f"  Cookies строка: {cookies}")
                 raise
-            
+
             # Устанавливаем в запрос
             request.cookies = parsed_cookies
             proxy = proxy.replace('\n', '')
@@ -107,11 +104,7 @@ class CookieProxyRetryMiddleware:
             request.meta['used_cookies'] = cookies
             request.meta['used_proxy'] = proxy
             request.meta['cookie_retry_count'] = self._get_retry_count(request) + 1
-            
-            logger.info(f"  Итоговые значения:")
-            logger.info(f"    request.cookies: {request.cookies}")
-            logger.info(f"    request.meta.proxy: {request.meta.get('proxy')}")
-            
+
             spider.logger.info(
                 f'Используем новые credentials для store_id={store_id}. '
                 f'Proxy: {proxy}, Попытка: {request.meta["cookie_retry_count"]}\n {request.url}'
@@ -126,7 +119,7 @@ class CookieProxyRetryMiddleware:
         """Устанавливает куки и прокси при первом запросе"""
         logger.info(f"process_request для {request.url}")
         logger.info(f"  used_cookies в meta: {'used_cookies' in request.meta}")
-        
+
         # Устанавливаем credentials только если их еще нет
         if 'used_cookies' not in request.meta:
             logger.info(f"  Устанавливаем начальные credentials")

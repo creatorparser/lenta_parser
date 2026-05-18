@@ -18,42 +18,8 @@ class DockerDownloadHandler(HTTP11DownloadHandler):  # Убедись, что и
         super().__init__(*args, **kwargs)
         logger.info("🔗 DockerDownloadHandler initialized")
 
-    def download_request(self, request: Request, spider: Spider) -> defer.Deferred:
-        if not request.meta.get("camoufox", True):
-            logger.debug(f"🔄 Пропускаю через обычный загрузчик: {request.url}")
-            return super().download_request(request, spider)
-
-        logger.debug(f"🤖 Отправляю в Docker сервис: {request.url}")
-
-        payload = {
-            "url": request.url,
-            "block_images": request.meta.get("block_images", True),
-            "wait_for_xpath": request.meta.get("wait_for_xpath"),
-            "wait_for_timeout": request.meta.get("wait_for_timeout", 10000),
-            "get_cookies": request.meta.get("get_camoufox_cookies", False),
-            "get_headers": request.meta.get("get_camoufox_headers", False),
-        }
-
-        if proxy := request.meta.get('proxy_camoufox'):
-            payload["proxy"] = proxy
-
-        d = post(
-            SERVICE_URL,
-            json=payload,
-            timeout=self._get_timeout(request, spider)
-        )
-
-        d.addCallback(self._treq_to_text)
-        d.addCallback(self._parse_response_text, request)
-        d.addErrback(self._on_error, request)
-
-        return d
-
     def _get_timeout(self, request, spider):
         return request.meta.get("download_timeout", 180)
-
-    def _treq_to_text(self, response):
-        return response.text()
 
     @defer.inlineCallbacks
     def download_request(self, request: Request, spider: Spider):

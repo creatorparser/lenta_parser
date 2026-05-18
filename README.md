@@ -1,24 +1,34 @@
 # Lenta Parser
+
 ## Описание парсеров
 
 ### 1. lenta_cookies
 
-**Назначение:** Создание и сохранение cookies/headers для обхода антибот-защиты.
+**Назначение:** Создание и сохранение cookies для обхода антибот-защиты. 
 
 **Как работает:**
 - Использует Camoufox для эмуляции реального браузера
 - Посещает главную страницу сайта через прокси
-- Сохраняет полученные cookies и headers в базу данных
+- Сохраняет полученные cookies в базу данных
 - Удаляет старые записи перед запуском
+
+**Примечания:**
+- Нужно использовать статичные прокси, так как куки привязываются к ip адресам.
+- В данном проекте используются прокси с авторизацией http://user:password@ip:port
+- Для использования стандартого файла прокси, создайте файл list_proxies.txt в папке files.
 
 **Запуск:**
 
 ```bash
+# Базовый запуск
 scrapy crawl lenta_cookies
+
+# С указанием файла с прокси
+scrapy crawl lenta_cookies -a proxy_file="/path"
 ```
 
 **Параметры:**
-- `proxy_file` - путь к файлу со списком прокси (по умолчанию: `files/list_proxies.txt`)
+- `proxy_file` - путь к файлу со списком прокси (по умолчанию: `files/list_proxies.txt`).
 
 ---
 
@@ -34,11 +44,15 @@ scrapy crawl lenta_cookies
 **Запуск:**
 
 ```bash
-scrapy crawl lenta_links
+# Базовый запуск
+scrapy crawl lenta_cookies
+
+С указанием прокси
+scrapy crawl lenta_links -a PROXY="http://user:password@ip:port"
 ```
 
 **Параметры:**
-- `proxy_file` - путь к файлу со списком прокси (по умолчанию: `files/list_proxies.txt`)
+- `PROXY` - прокси
 
 ---
 
@@ -47,7 +61,7 @@ scrapy crawl lenta_links
 **Назначение:** Парсинг каталога товаров с получением информации о ценах и наличии.
 
 **Как работает:**
-- Устанавливает режим доставки (pickup) для конкретного магазина
+- Устанавливает адрес магазина
 - Запрашивает данные через API Lenta
 - Использует scrapy-impersonate для эмуляции браузера Firefox
 - Автоматически меняет cookies/headers при ошибках 403/401
@@ -63,15 +77,18 @@ scrapy crawl lenta_catalog
 
 # С указанием адреса магазина
 scrapy crawl lenta_catalog -a address="Самара, Аэродромная ул., 47А, ТЦ Аврора-молл"
-
-# С указанием файла прокси
-scrapy crawl lenta_catalog -a proxy_file=files/custom_proxies.txt
 ```
 
 **Параметры:**
-- `NAME_QUEUE` - имя очереди в Redis (должно содержать данные от lenta_links)
 - `address` - полный адрес магазина для получения storeId (опционально)
-- `proxy_file` - путь к файлу со списком прокси (по умолчанию: `files/list_proxies.txt`)
+
+- **Примечание:** Прокси указывать не нужно, так как они уже есть в БД с cookies.
+- **Примечание:** В настройках установлены настройки, ограничивающие нагрузку.
+
+```
+DOWNLOAD_DELAY = 5
+CONCURRENT_REQUESTS = 1
+```
 
 ---
 
@@ -94,7 +111,7 @@ cd parse_project
 ### 2. Создание виртуального окружения
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 ```
 
@@ -158,10 +175,21 @@ CREATE TABLE products (
 
 ```bash
 cd camoufox_docker
-docker-compose up -d
+docker build -t camoufox-service .
+docker run -p 8000:8000 camoufox-service
 ```
 
 ---
+
+### 7. Создание папки с логами.
+```bash
+mkdir -p files/logs
+```
+
+### 8. Создание стандартного файла с прокси.
+```bash
+touch files/list_proxies.txt
+```
 
 ## 📁 Структура проекта
 

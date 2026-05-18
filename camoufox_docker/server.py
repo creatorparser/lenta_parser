@@ -78,7 +78,7 @@ async def scrape_endpoint(req: ScrapeRequest):
 
             logger.info(f"🌐 Переход: {req.url}")
             response = await page.goto(req.url, timeout=req.wait_for_timeout)
-            time.sleep(15)
+
             if req.wait_for_xpath:
                 try:
                     await page.wait_for_selector(
@@ -88,7 +88,7 @@ async def scrape_endpoint(req: ScrapeRequest):
                     logger.info(f"✅ XPath найден: {req.wait_for_xpath}")
                 except Exception as e:
                     logger.warning(f"⚠️ XPath не дождались: {e}")
-
+            time.sleep(7)
             html = await page.content()
 
             cookies = {}
