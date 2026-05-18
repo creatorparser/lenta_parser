@@ -1,0 +1,12 @@
+curl-cffi
+python-dotenv
+psycopg2-binary
+json-repair
+PyVirtualDisplay
+pyparsing
+redis
+Scrapy
+nodriver
+
+scrapyd==1.6.0
+scrapydweb==1.6.0
